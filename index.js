@@ -6,6 +6,8 @@ const authRoutes = require('./routes/auth.route');
 const postRoutes = require('./routes/post.route');
 const commentRoutes = require('./routes/comment.route');
 require('dotenv').config();
+const cors = require('cors');
+
 
 mongoose
   .connect(process.env.MONGO,{ dbName: process.env.DBNAME })
@@ -20,6 +22,7 @@ mongoose
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 
 const PORT = process.env.PORT || 5050;
 
