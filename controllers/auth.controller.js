@@ -25,6 +25,12 @@ const signup = async (req, res, next) => {
     password: hashedPassword,
   });
 
+    // const token = jwt.sign(
+    //   { id: newUser._id, isAdmin: newUser.isAdmin },
+    //   process.env.JWT_SECRET
+    // );
+
+
   try {
     await newUser.save();
     res.json('Signup successful');
@@ -33,39 +39,83 @@ const signup = async (req, res, next) => {
   }
 };
 
+// const signin = async (req, res, next) => {
+//   const { email, password } = req.body;
+
+//   if (!email || !password || email === '' || password === '') {
+//     next(errorHandler(400, 'All fields are required'));
+//   }
+
+//   try {
+//     const validUser = await User.findOne({ email });
+//     if (!validUser) {
+//       return next(errorHandler(404, 'User not found'));
+//     }
+//     const validPassword = bcryptjs.compareSync(password, validUser.password);
+//     if (!validPassword) {
+//       return next(errorHandler(400, 'Invalid password'));
+//     }
+//     const token = jwt.sign(
+//       { id: validUser._id, isAdmin: validUser.isAdmin },
+//       process.env.JWT_SECRET
+//     );
+
+//     const { password: pass, ...rest } = validUser._doc;
+
+//     res
+//       .status(200)
+//       .cookie('access_token', token, {
+//         httpOnly: true,
+//       })
+//       .json(rest);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// POST /api/auth/signin
 const signin = async (req, res, next) => {
-  const { email, password } = req.body;
-
-  if (!email || !password || email === '' || password === '') {
-    next(errorHandler(400, 'All fields are required'));
-  }
-
   try {
-    const validUser = await User.findOne({ email });
-    if (!validUser) {
+    const { email = '', password = '' } = req.body || {};
+    if (!email.trim() || !password.trim()) {
+      return next(errorHandler(400, 'All fields are required'));
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
       return next(errorHandler(404, 'User not found'));
     }
-    const validPassword = bcryptjs.compareSync(password, validUser.password);
-    if (!validPassword) {
+
+    const ok = await bcryptjs.compare(password, user.password);
+    if (!ok) {
       return next(errorHandler(400, 'Invalid password'));
     }
+
+    if (!process.env.JWT_SECRET) {
+      return next(errorHandler(500, 'JWT secret is not configured'));
+    }
+
     const token = jwt.sign(
-      { id: validUser._id, isAdmin: validUser.isAdmin },
-      process.env.JWT_SECRET
+      { id: user._id.toString(), isAdmin: !!user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' } // set a sensible expiry
     );
 
-    const { password: pass, ...rest } = validUser._doc;
 
     res
-      .status(200)
       .cookie('access_token', token, {
-        httpOnly: true,
+        httpOnly: true,          // not readable by JS
+        maxAge: 7 * 24 * 60 * 60 * 1000,   // 7 days
+        path: '/',               // send on all routes
       })
-      .json(rest);
-  } catch (error) {
-    next(error);
+      .status(200)
+      .json({user });
+  } catch (err) {
+    console.log("error")
+    next(err);
   }
 };
+
 
 const google = async (req, res, next) => {
   const { email, name, googlePhotoUrl } = req.body;

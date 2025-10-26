@@ -90,6 +90,7 @@ const getUsers = async (req, res, next) => {
       .sort({ createdAt: sortDirection })
       .skip(startIndex)
       .limit(limit);
+      console.log(users);
 
     const usersWithoutPassword = users.map((user) => {
       const { password, ...rest } = user._doc;

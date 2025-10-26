@@ -20,9 +20,13 @@ mongoose
 
 
 const app = express();
-app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-frontend.example'], 
+  credentials: true, // <-- required to allow cookies
+}));
+
 
 const PORT = process.env.PORT || 5050;
 

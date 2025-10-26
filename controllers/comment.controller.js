@@ -1,25 +1,63 @@
 const Comment = require('../models/comment.model.js');
 
+// const createComment = async (req, res, next) => {
+//   try {
+//     const { content, postId, userId } = req.body;
+//     console.log("comment",content);
+
+//     if (userId !== req.user.id) {
+//       return next(
+//         errorHandler(403, 'You are not allowed to create this comment')
+//       );
+//     }
+//     console.log("upto user unequal")
+//     const newComment = new Comment({
+//       content,
+//       postId,
+//       userId,
+//     });
+//     await newComment.save();
+
+//     res.status(200).json(newComment);
+//   } catch (error) {
+//     console.log("error in saving comment");
+//     next(error);
+//   }
+// };
+
 const createComment = async (req, res, next) => {
   try {
-    const { content, postId, userId } = req.body;
-
-    if (userId !== req.user.id) {
-      return next(
-        errorHandler(403, 'You are not allowed to create this comment')
-      );
+    // 1) Auth required
+    const authUserId = req.user?.id;
+    if (!authUserId) {
+      return next(errorHandler(401, 'Unauthorized'));
     }
 
-    const newComment = new Comment({
-      content,
-      postId,
-      userId,
-    });
-    await newComment.save();
+    // 2) Pull only what you need from body
+    const { content = '', postId } = req.body || {};
 
-    res.status(200).json(newComment);
-  } catch (error) {
-    next(error);
+    // 3) Validate content
+    const text = String(content).trim();
+    if (!text) return next(errorHandler(400, 'Content is required'));
+    if (text.length > 200) {
+      return next(errorHandler(400, 'Content too long (max 200 chars)'));
+    }
+
+    // 6) Create comment using the authenticated user
+    const comment = await Comment.create({
+      content: text,
+      postId,
+      userId: authUserId,
+    });
+
+    // 7) Return created resource (optionally populate author fields)
+    const saved = await Comment.findById(comment._id)
+      .populate('userId', '_id name avatar') // adjust fields to your schema
+      .lean();
+
+    return res.status(201).json(saved ?? comment);
+  } catch (err) {
+    return next(err);
   }
 };
 

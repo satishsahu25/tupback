@@ -7,7 +7,6 @@ const test = require('../controllers/user.controller.js').test;
 const updateUser = require('../controllers/user.controller.js').updateUser;
 const verifyToken = require('../utils/verifyUser.js').verifyToken;
 
-
 const router = express.Router();
 
 router.get('/test', test);
