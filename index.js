@@ -23,7 +23,7 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://theunfoldedpassport-v1.netlify.app/'], 
+  origin: ['http://localhost:5173', 'https://theunfoldedpassport-v1.netlify.app'], 
   credentials: true, // <-- required to allow cookies
 }));
 
