@@ -102,14 +102,20 @@ const signin = async (req, res, next) => {
     );
 
 
+    const cookieOptions = {
+      httpOnly: true,                         // not readable by JS
+      maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days
+      path: '/',                              // send on all routes
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    };
+
+    const { password: _pass, ...userWithoutPassword } = user._doc;
+
     res
-      .cookie('access_token', token, {
-        httpOnly: true,          // not readable by JS
-        maxAge: 7 * 24 * 60 * 60 * 1000,   // 7 days
-        path: '/',               // send on all routes
-      })
+      .cookie('access_token', token, cookieOptions)
       .status(200)
-      .json({user });
+      .json({ user: userWithoutPassword });
   } catch (err) {
     console.log("error")
     next(err);
@@ -127,11 +133,17 @@ const google = async (req, res, next) => {
         process.env.JWT_SECRET
       );
       const { password, ...rest } = user._doc;
+      const cookieOptions = {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      };
+
       res
         .status(200)
-        .cookie('access_token', token, {
-          httpOnly: true,
-        })
+        .cookie('access_token', token, cookieOptions)
         .json(rest);
     } else {
       const generatedPassword =
@@ -152,11 +164,17 @@ const google = async (req, res, next) => {
         process.env.JWT_SECRET
       );
       const { password, ...rest } = newUser._doc;
+      const cookieOptions = {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      };
+
       res
         .status(200)
-        .cookie('access_token', token, {
-          httpOnly: true,
-        })
+        .cookie('access_token', token, cookieOptions)
         .json(rest);
     }
   } catch (error) {
