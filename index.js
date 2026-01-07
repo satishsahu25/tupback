@@ -22,10 +22,31 @@ mongoose
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://theunfoldedpassport-v1.netlify.app'], 
-  credentials: true, // <-- required to allow cookies
-}));
+
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'https://thesatishsahu.netlify.app',
+]);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, '');
+
+    if (allowedOrigins.has(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 
 const PORT = process.env.PORT || 5050;
